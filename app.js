@@ -9,6 +9,13 @@ var budgetController = (function(){
         this.des = des;
         this.val = val;
     }
+    function CalculateBudget(type){
+        var sum = 0;
+        data.allItems[type].forEach(function(curr){
+            sum += curr.val;
+        });
+        data.totalItems[type] = sum;
+    }
     var data = {
         allItems : {
             inc : [],
@@ -19,7 +26,7 @@ var budgetController = (function(){
             exp : 0
         },
         total : 0,
-        percentage:0
+        percentage:-1
     }
     
     return{
@@ -39,6 +46,22 @@ var budgetController = (function(){
             data.allItems[obj.type].push(instanse);
             return instanse;
            
+        },
+        GetBudget:function(){
+            CalculateBudget('inc');
+            CalculateBudget('exp');
+            data.total = data.totalItems.inc - data.totalItems.exp;
+            if(data.totalItems.inc > 0){
+                data.percentage = Math.round((data.totalItems.exp / data.totalItems.inc) * 100);
+            }else{
+                data.percentage = -1;
+            }            
+            return{
+                totalInc : data.totalItems.inc,
+                totalExp : data.totalItems.exp,
+                totalBudget : data.total,
+                percentage : data.percentage
+            }
         }
         
     }
@@ -55,14 +78,18 @@ var UIController = (function(){
         inputDomValue: '.add__value',
         btnAdd : '.add__btn',
         incomeList : '.income__list',
-        expenseList : '.expenses__list'
+        expenseList : '.expenses__list',
+        budgetIncomeValue:'.budget__income--value',
+        budgetExpenseValue : '.budget__expenses--value',
+        budgetPercentageValue : '.budget__expenses--percentage',
+        budgetValue:'.budget__value',
     }
     return{
         GetDomValue:function(){
             var type , describtion , value;
             typedata = document.querySelector(domstring.typeDom).value;
             describtion = document.querySelector(domstring.inputDomDescribtion).value;
-            value = document.querySelector(domstring.inputDomValue).value;
+            value = parseFloat(document.querySelector(domstring.inputDomValue).value);
             return{
                 type :typedata,
                 des : describtion,
@@ -87,6 +114,16 @@ var UIController = (function(){
             newHtml = newHtml.replace("%value%" , obj.val);
             document.querySelector(element).insertAdjacentHTML('beforeend' , newHtml);
         },
+        setBudget : function(obj){
+            document.querySelector(domstring.budgetIncomeValue).textContent = obj.totalInc;
+            document.querySelector(domstring.budgetExpenseValue).textContent= obj.totalExp;
+            document.querySelector(domstring.budgetValue).textContent= obj.totalBudget;
+            if(obj.percentage > 0){
+                document.querySelector(domstring.budgetPercentageValue).textContent = obj.percentage + ' %';
+            }else{
+                document.querySelector(domstring.budgetPercentageValue).textContent = '---';
+            }  
+        }
         
         
     }
@@ -105,18 +142,29 @@ var controller = (function(budgetCtrl , UICtrl){
             }
         })
     }
+    function CalculateBudget(){
+        var budget;
+        budget = budgetCtrl.GetBudget();
+        UICtrl.setBudget(budget);
+    }
     function AddItem(){
         var input , item;
         input = UICtrl.GetDomValue();         
         item = budgetCtrl.AddItem(input); 
         UICtrl.AddToDom(input.type,item);
-        
+        CalculateBudget();
     }
     
     return{
         init:function(){
             console.log("app started");
             SetUpEvent();
+             UICtrl.setBudget({
+                totalInc : 0,
+                totalExp : 0,
+                totalBudget : 0,
+                percentage : -1
+            });
         }
     }
     
