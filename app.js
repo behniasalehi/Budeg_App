@@ -99,7 +99,7 @@ var controller = (function(budgetCtrl , UICtrl){
     var SetUpEvent = function () {
         var dom = UICtrl.GetDomString();
         document.querySelector(dom.btnAdd).addEventListener('click' , AddItem);
-        document.addEventListener('ketpress' , function(e){
+        document.addEventListener('keypress' , function(e){
             if(e.keyCode === 13){
                 AddItem();
             }
